@@ -1,19 +1,33 @@
 import inspect
+from .exceptions import ParamsDoesNotMatchError
 
 def strict_func(func):
+    '''
+    Ensures that a function parameters match the typings specified 
+    by the uder
+    '''
 
     def inner(*args, **kwargs):
 
         annot : dict= func.__annotations__
-        arguements = inspect.getfullargspec(func)
-        print(annot, arguements)
+        arguements = inspect.getfullargspec(func).args
+
+        print(annot, inspect.getargvalues(func))
         if annot:
-            annot_items = list(annot.items())
             for i in range(len(args)):
                 param = args[i]
-                
-                if(type(param) != annot_items[i][1]):
-                    raise ValueError('The value does not the type')
+                arg = arguements[i]
+
+                annot_type = None
+                try:
+                    annot_type = annot[arg]
+                except KeyError:
+                    pass
+
+                if (annot_type): # if typing was allocated to the arguement
+                    if(type(param) != annot_type):
+                        error_msg = f"the parameter '{arg}' is not of {annot_type} "
+                        raise ParamsDoesNotMatchError(error_msg)
 
         value = func(*args, **kwargs)
 
