@@ -1,0 +1,2 @@
+class ParamsDoesNotMatchError(Exception):
+    pass

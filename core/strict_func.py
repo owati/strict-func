@@ -12,7 +12,7 @@ def strict_func(func):
         annot : dict= func.__annotations__
         arguements = inspect.getfullargspec(func).args
 
-        print(annot, inspect.getargvalues(func))
+        #print(annot, inspect.getargvalues(func))
         if annot:
             for i in range(len(args)):
                 param = args[i]
