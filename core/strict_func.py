@@ -1,4 +1,5 @@
 import inspect
+from types import UnionType, GenericAlias
 from .exceptions import ParamsDoesNotMatchError
 
 def strict_func(func):
@@ -10,24 +11,35 @@ def strict_func(func):
     def inner(*args, **kwargs):
 
         annot : dict= func.__annotations__
-        arguements = inspect.getfullargspec(func).args
+        params_map = inspect.getcallargs(func, *args, **kwargs)
 
-        #print(annot, inspect.getargvalues(func))
+        print(params_map, annot)
         if annot:
-            for i in range(len(args)):
-                param = args[i]
-                arg = arguements[i]
-
-                annot_type = None
+            for arg, param in params_map.items():
+                arg_type = None
                 try:
-                    annot_type = annot[arg]
+                    arg_type = annot[arg]
                 except KeyError:
                     pass
 
-                if (annot_type): # if typing was allocated to the arguement
-                    if(type(param) != annot_type):
-                        error_msg = f"the parameter '{arg}' is not of {annot_type} "
-                        raise ParamsDoesNotMatchError(error_msg)
+                if arg_type:
+                    if type(arg_type) == type: # for customed types in python
+                        if type(param) != arg_type:
+                            error_msg = f'The value of "{arg}" is not of type {arg_type}'
+                            raise ParamsDoesNotMatchError(error_msg)
+
+                    elif type(arg_type) == UnionType: # for union types 
+                        type_list = str(arg_type).split(' | ')
+                        if type(param).__name__ not in type_list:
+                            error_msg = f'The value of "{arg}" is not of types {" ".join([f"<class {x}>" for x in type_list])}'
+                            raise ParamsDoesNotMatchError(error_msg)
+
+                    elif type(arg_type) == GenericAlias:
+                        print(str(arg_type))
+
+                    else:
+                        print(type(param).__name__, arg_type)
+
 
         value = func(*args, **kwargs)
 
