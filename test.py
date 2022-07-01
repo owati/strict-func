@@ -1,7 +1,7 @@
-from core.strict_func import strict_func
+from core.strict_func import Strict_func
 
-@strict_func
-def test_func(p : int | str, g : str, *args : tuple[int , ...]):
+@Strict_func
+def test_func(p : int, g : str, *args):
     print(p)
     
 
