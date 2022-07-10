@@ -2,6 +2,7 @@
 
 import abc
 from types import GenericAlias
+from core.exceptions import ParamsDoesNotMatchError
 
 from exceptions import InvalidGenericAliasError
 
@@ -23,7 +24,7 @@ class GenericAliasChecker(Checker):
         self.main_type = split_list[0]
         self.other_types = split_list[1][:-1]
 
-        print(self.main_type, self.other_types), len
+        print(self.main_type, self.other_types)
         if ('[' in self.other_types):
             error_msg = 'The generic alias cannot contain another generic alias'
             raise InvalidGenericAliasError(error_msg)
@@ -36,9 +37,28 @@ class GenericAliasChecker(Checker):
                 pass
 
 
-    def is_type(value) -> bool:
-        return True
+    def is_type(self,value) -> bool | None:
+        if str(type(value)) == self.main_type:
+            types_list = self.other_types.split(' ,')
+
+            if self.main_type == 'list':
+                # when the value is of type list
+                if len(types_list) == 1:
+                    # when the parametized types of the list is just one
+                    for _value in value:
+                        if type(_value) != types_list[0]:
+                            error_msg = f''
+
+                if (len(value) != len(types_list)):
+                    error_msg = 'The length of the value does not match the length of the type specified'
+                    raise ParamsDoesNotMatchError(error_msg)
+
+            for types in self.other_types.split(','):
+                pass
+        else:
+            error_msg = f'the value is not of type {self.main_type}'
+            raise ParamsDoesNotMatchError(error_msg)
 
 
 if __name__ == '__main__':
-    check = GenericAliasChecker(dict[str, int | list[int]])
+    check = GenericAliasChecker(list[int, str, int])
