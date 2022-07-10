@@ -42,12 +42,12 @@ class GenericAliasChecker(Checker):
 
 
     def is_type(self,value) -> bool | None:
-        print(str(type(value)))
+        #print(str(type(value)))
         
         if str(type(value)) == self.convert_to_type_string(self.main_type):
             types_list = self.other_types.split(', ')
 
-            print(types_list)
+            #print(types_list)
 
             if self.main_type == 'list':
                 # when the value is of type list
