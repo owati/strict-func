@@ -3,3 +3,6 @@ class ParamsDoesNotMatchError(Exception):
 
 class InvalidGenericAliasError(Exception):
     pass
+
+class InvalidDictionaryCheckerError(Exception):
+    pass
