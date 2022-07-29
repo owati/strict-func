@@ -22,7 +22,7 @@ class DictChecker(Checker):
         if types :
             if len(types) == 2:
                 _key, _value = types
-                if _key not in ( bool ,  int ,  str ,  float):
+                if _key not in ( bool ,  int ,  str ,  float, tuple):
                     msg = f'The key "{_key}" is not a valid key type'
                     raise InvalidDictionaryCheckerError(msg)
 
@@ -82,8 +82,17 @@ class DictChecker(Checker):
                     except KeyError:
                         msg = f'The key "{key}" was not found in the dictinary checker'
                         raise ParamsDoesNotMatchError(msg)
+
             else:
-                pass
+                for key, value in arg.items():
+                    if type(key) != self.sub_types[0]:
+                        msg = f'The key "{key}" is not of type {self.sub_types[0]}'
+                        raise ParamsDoesNotMatchError(msg)
+                    # elif :
+                    #     pass
+                        
+
+                
 
 
 
