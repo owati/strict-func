@@ -1,8 +1,8 @@
 # The class to aid the checking of more complex types
 
 import abc
-from types import GenericAlias, UnionType
-from exceptions import InvalidDictionaryCheckerError, ParamsDoesNotMatchError
+from types import GenericAlias , UnionType
+from exceptions import InvalidDictionaryCheckerError , ParamsDoesNotMatchError
 
 
 class Checker(abc.ABC):
@@ -51,7 +51,10 @@ class DictChecker(Checker):
             return DictChecker(value)
 
     def __str__(self) -> str:
-        pass
+        # The string display of the project
+        # if type(self.sub_types) == tuple:
+        #     return 'Dict []'
+        return 'Dict'
 
     def confirm_type(self, arg : dict):
         if type(arg) == self.main_type:
@@ -84,13 +87,33 @@ class DictChecker(Checker):
                         raise ParamsDoesNotMatchError(msg)
 
             else:
+                key_type ,value_type = self.sub_types
+
                 for key, value in arg.items():
-                    if type(key) != self.sub_types[0]:
-                        msg = f'The key "{key}" is not of type {self.sub_types[0]}'
+                    if type(key) != key_type:
+                        msg = f'The key "{key}" is not of type {key_type}'
                         raise ParamsDoesNotMatchError(msg)
-                    # elif :
-                    #     pass
-                        
+                    
+                    if type(value_type) == type:
+                        if type(value) != value_type:
+                            msg = f'The value "{value} is not of type "{value_type}"'
+                            raise ParamsDoesNotMatchError(msg)
+                    
+                    elif type(value_type) == UnionType:
+                        if not isinstance(value, value_type):
+                            msg = f'The value "{value} is not of type "{value_type}"'
+                            raise ParamsDoesNotMatchError(msg)
+
+                    elif type(value_type) == DictChecker:
+                        try:
+                            value_type.confirm_type(value)
+                        except ParamsDoesNotMatchError:
+                            msg = f"the value '{value}' of key '{key}' is not of type '{type_to_check}' "
+                            raise ParamsDoesNotMatchError(msg)
+        
+        else:
+            msg = f'The argunemt {arg} is not of type dict'
+            raise ParamsDoesNotMatchError()
 
                 
 
@@ -99,6 +122,9 @@ class DictChecker(Checker):
 if __name__ == '__main__':
     Dict = DictChecker()
 
-    f = Dict[int, int]
+    f = Dict[{
+        'pol' : int,
+        "polas" : str | int
+    }]
 
-    f.confirm_type({'polas' : 1})
+    f.confirm_type({'polas' : [1,3], 'pol' : 1})
