@@ -2,7 +2,7 @@
 
 import abc
 from types import GenericAlias , UnionType
-from exceptions import InvalidDictionaryCheckerError , ParamsDoesNotMatchError
+from exceptions import InvalidDictionaryCheckerError , ParamsDoesNotMatchError, InvalidListCheckerError
 
 
 class Checker(abc.ABC):
@@ -14,8 +14,19 @@ class Checker(abc.ABC):
     def confirm_type(self, arg):
         pass
 
+    def is_type(self, arg):
+        try:
+            self.confirm_type(arg)
+            return True
+        except:
+            return False
+
 
 class DictChecker(Checker):
+    '''
+    This is the class checker is for the dictionaries
+    It can either by using the solution is 
+    '''
     main_type = dict
 
     def __init__(self, *types) -> None:
@@ -115,8 +126,50 @@ class DictChecker(Checker):
             msg = f'The argunemt {arg} is not of type dict'
             raise ParamsDoesNotMatchError()
 
+
+class ListChecker(Checker):
+    '''
+    This is a List Class checker
+    '''
+    main_type = list
+
+    def __init__(self, *types) -> None:
+        for type_item in types:
+            if type(type_item) not in [type, UnionType, DictChecker, ListChecker]:
+                msg = f'The checking value {type_item} is not supported'
+                raise InvalidListCheckerError(msg)
+        
+        self.sub_types = types
+
+
+    def __getitem__(self, value):
+        return ListChecker(*value)
+
+    @staticmethod
+    def confirm_item(value, type_check, error_func : function):
+        if type(type_check) == type:
+            if type(value) != type_check:
+                msg = error_func(value, type_check)
+                raise ParamsDoesNotMatchError(msg)
+        elif type(type_check) == UnionType:
+            if not isinstance(value):
+                msg = error_func(value, type_check)
+                raise ParamsDoesNotMatchError(msg)
+        elif type(type_check) in [DictChecker, ListChecker]:
+            if not type_check.is_type(value):
+                msg = error_func(value, type_check)
+                raise ParamsDoesNotMatchError(msg)
                 
 
+
+    def confirm_type(self, arg):
+        if type(arg) == self.main_type:
+            if len(self.sub_types) == 1:
+                type_to_check = self.sub_types[0]
+                for item in arg:
+                    self.confirm_item(arg, type_to_check, lambda _val, _type : f'The value {_val} is nor part of the ' )
+                        
+                    
 
 
 if __name__ == '__main__':

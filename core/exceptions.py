@@ -6,3 +6,6 @@ class InvalidGenericAliasError(Exception):
 
 class InvalidDictionaryCheckerError(Exception):
     pass
+
+class InvalidListCheckerError(Exception):
+    pass
