@@ -138,6 +138,10 @@ class ListChecker(Checker):
             if type(type_item) not in [type, UnionType, DictChecker, ListChecker]:
                 msg = f'The checking value {type_item} is not supported'
                 raise InvalidListCheckerError(msg)
+            if type(type_item) == type(...):
+                if types.index(type_item) != (len(type_item) - 1):
+                    msg  = 'A ellipsis can only be the last item in the list checker'
+                    raise InvalidListCheckerError(msg)
         
         self.sub_types = types
 
@@ -148,14 +152,19 @@ class ListChecker(Checker):
     @staticmethod
     def confirm_item(value, type_check, error_func : function):
         if type(type_check) == type:
+
             if type(value) != type_check:
                 msg = error_func(value, type_check)
                 raise ParamsDoesNotMatchError(msg)
+
         elif type(type_check) == UnionType:
+
             if not isinstance(value):
                 msg = error_func(value, type_check)
                 raise ParamsDoesNotMatchError(msg)
+
         elif type(type_check) in [DictChecker, ListChecker]:
+
             if not type_check.is_type(value):
                 msg = error_func(value, type_check)
                 raise ParamsDoesNotMatchError(msg)
@@ -167,7 +176,27 @@ class ListChecker(Checker):
             if len(self.sub_types) == 1:
                 type_to_check = self.sub_types[0]
                 for item in arg:
-                    self.confirm_item(arg, type_to_check, lambda _val, _type : f'The value {_val} is nor part of the ' )
+                    self.confirm_item(item, type_to_check, 
+                                lambda _val, _type : f'The value {_val} is not part of the type {_type}' )
+
+            else:
+                for item in arg:
+                    ind = arg.index(item)
+
+                    
+                    allow_dynamic_end =  type(sub_type) == type(...)
+                        
+                    try:
+                        self.confirm_item(arg[ind], sub_type, 
+                                    lambda _val, _type : f'The value {_val}  at index {ind} is not of the type {_type}')
+                    except IndexError:
+                        if not allow_dynamic_end:
+                            msg = 'The length of the list does not match'
+                            raise ParamsDoesNotMatchError(msg)
+
+
+                    
+                        
                         
                     
 
