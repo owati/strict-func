@@ -25,7 +25,11 @@ class Checker(abc.ABC):
 class DictChecker(Checker):
     '''
     This is the class checker is for the dictionaries
-    It can either by using the solution is 
+    This dict checker can be used in different modes
+
+    MODE 1 : Dict => The arguement must be a dictionary
+
+    MODE 2 : Dict[type1, type2] => The arguement must have the key to 
     '''
     main_type = dict
 
@@ -135,22 +139,25 @@ class ListChecker(Checker):
 
     def __init__(self, *types) -> None:
         for type_item in types:
-            if type(type_item) not in [type, UnionType, DictChecker, ListChecker]:
+            if type(type_item) not in [type, UnionType, DictChecker, ListChecker, type(...)]:
                 msg = f'The checking value {type_item} is not supported'
                 raise InvalidListCheckerError(msg)
+
             if type(type_item) == type(...):
-                if types.index(type_item) != (len(type_item) - 1):
+                if types.index(type_item) != (len(types) - 1):
                     msg  = 'A ellipsis can only be the last item in the list checker'
                     raise InvalidListCheckerError(msg)
         
         self.sub_types = types
 
 
-    def __getitem__(self, value):
+    def __getitem__(self, value): 
+        if type(value) != tuple:
+            return ListChecker(value)
         return ListChecker(*value)
 
     @staticmethod
-    def confirm_item(value, type_check, error_func : function):
+    def confirm_item(value, type_check, error_func):
         if type(type_check) == type:
 
             if type(value) != type_check:
@@ -171,28 +178,29 @@ class ListChecker(Checker):
                 
 
 
-    def confirm_type(self, arg):
+    def confirm_type(self, arg : list):
         if type(arg) == self.main_type:
             if len(self.sub_types) == 1:
                 type_to_check = self.sub_types[0]
                 for item in arg:
                     self.confirm_item(item, type_to_check, 
-                                lambda _val, _type : f'The value {_val} is not part of the type {_type}' )
+                                lambda _val, _type : f'The value "{_val}" is not part of the type {_type}' )
 
             else:
                 for item in arg:
                     ind = arg.index(item)
-
-                    
-                    allow_dynamic_end =  type(sub_type) == type(...)
                         
                     try:
-                        self.confirm_item(arg[ind], sub_type, 
-                                    lambda _val, _type : f'The value {_val}  at index {ind} is not of the type {_type}')
+                        self.confirm_item(item, self.sub_types[ind], 
+                                    lambda _val, _type : f'The value "{_val}"  at index "{ind}" is not of the type {_type}')
                     except IndexError:
-                        if not allow_dynamic_end:
-                            msg = 'The length of the list does not match'
+                        if type(self.sub_types[-1]) != type(...):
+                            msg = 'The List does not match the length of the Checker. Try putting "..." at the end'
                             raise ParamsDoesNotMatchError(msg)
+        
+        else:
+            msg = f"The value of this argument '{arg}' is not of type list"
+            raise ParamsDoesNotMatchError(msg)
 
 
                     
@@ -203,10 +211,14 @@ class ListChecker(Checker):
 
 if __name__ == '__main__':
     Dict = DictChecker()
+    List = ListChecker()
 
-    f = Dict[{
-        'pol' : int,
-        "polas" : str | int
-    }]
+    List[int, str, ...].confirm_type([1,2,'pols'])
+    # f = Dict[{
+    #     'pol' : int,
+    #     "polas" : str | int
+    # }]
 
-    f.confirm_type({'polas' : [1,3], 'pol' : 1})
+    # f.confirm_type({'polas' : 'polas', 'pol' : 1})
+
+
