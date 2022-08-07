@@ -1,6 +1,16 @@
 import inspect
+from lib2to3.pytree import type_repr
 from types import UnionType, GenericAlias
-from .exceptions import ParamsDoesNotMatchError
+
+if __name__ == '__main__':
+    print('importing2')
+    from exceptions import ParamsDoesNotMatchError
+    from checkers import Checker, DictChecker, ListChecker
+else:
+    print('importing3')
+    from .exceptions import ParamsDoesNotMatchError
+    from .checkers import Checker, DictChecker, ListChecker
+    f = DictChecker()
 
 class Strict_func:
     '''
@@ -34,7 +44,13 @@ class Strict_func:
                     elif type(arg_type) == GenericAlias:
                         print(str(arg_type))
 
+                    elif type(arg_type) in [DictChecker, ListChecker]:
+                        self.handle_custom_checker(arg, arg_type, param)
+
                     else:
+                        
+                        print(type(arg_type))
+                        print(issubclass(Checker, type(arg_type)))
                         print(type(param).__name__, arg_type)
 
 
@@ -75,4 +91,13 @@ class Strict_func:
     
     def handle_general_alias(self, arg : str, arg_type : type, param):
         pass
+
+
+    def handle_custom_checker(self, arg, arg_type, param):
+        '''
+        This is the function that handles the checking
+        This the customer checker to check
+        '''
+        print('This using the solution in the ')
+        arg_type.confirm_type(param)
 

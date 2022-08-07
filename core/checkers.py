@@ -2,8 +2,12 @@
 
 import abc
 from types import GenericAlias , UnionType
-from exceptions import InvalidDictionaryCheckerError , ParamsDoesNotMatchError, InvalidListCheckerError
 
+if __name__ == '__main__':
+    from exceptions import InvalidDictionaryCheckerError , ParamsDoesNotMatchError, InvalidListCheckerError
+
+else:
+    from .exceptions import InvalidDictionaryCheckerError , ParamsDoesNotMatchError, InvalidListCheckerError
 
 class Checker(abc.ABC):
     @abc.abstractmethod
@@ -128,7 +132,7 @@ class DictChecker(Checker):
         
         else:
             msg = f'The argunemt {arg} is not of type dict'
-            raise ParamsDoesNotMatchError()
+            raise ParamsDoesNotMatchError(msg)
 
 
 class ListChecker(Checker):
@@ -208,10 +212,10 @@ class ListChecker(Checker):
                         
                     
 
+Dict = DictChecker()
+List = ListChecker()
 
 if __name__ == '__main__':
-    Dict = DictChecker()
-    List = ListChecker()
 
     List[int, str, ...].confirm_type([1,2,'pols'])
     # f = Dict[{
