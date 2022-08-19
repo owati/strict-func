@@ -1,21 +1,24 @@
 import inspect
-from lib2to3.pytree import type_repr
 from types import UnionType, GenericAlias
 
 if __name__ == '__main__':
-    print('importing2')
     from exceptions import ParamsDoesNotMatchError
     from checkers import Checker, DictChecker, ListChecker
 else:
-    print('importing3')
     from .exceptions import ParamsDoesNotMatchError
     from .checkers import Checker, DictChecker, ListChecker
-    f = DictChecker()
 
-class Strict_func:
+class strict_func:
     '''
     Ensures that a function parameters match the typings specified 
-    by the under
+    by the functions annotations
+
+    Example
+    @strict_func
+    def foo(a : int, b : str) :
+        pass
+
+    foo('foo', 'bar') # fails the as 'foo' is not an integer
     '''
     def __init__(self, func) -> None:
         self.func = func
@@ -25,7 +28,7 @@ class Strict_func:
 
         params_map = inspect.getcallargs(self.func, *args, **kwargs)
 
-        print(params_map, self.annot)
+        # print(params_map, self.annot)
         if self.annot:
             for arg, param in params_map.items():
                 arg_type = None
@@ -66,7 +69,7 @@ class Strict_func:
         int, str, set, list, dict, and custom built classes
         '''
         if type(param) != arg_type:
-            error_msg = f'The value of "{arg}" is not of type {arg_type}'
+            error_msg = f'Error at arg => "{arg}" : it is not of type {arg_type}'
             raise ParamsDoesNotMatchError(error_msg)
 
 
@@ -80,7 +83,7 @@ class Strict_func:
         try:
             is_type = isinstance(param, arg_type)
             if not is_type:
-                error_msg = f'The value of "{arg}" is not of types {arg_type}'
+                error_msg = f'Error at arg => "{arg}" : it is not of types {arg_type}'
                 raise ParamsDoesNotMatchError(error_msg)
         except TypeError: # one of the types in the union is a parametized generic
             pass
@@ -98,6 +101,12 @@ class Strict_func:
         This is the function that handles the checking
         This the customer checker to check
         '''
-        print('This using the solution in the ')
-        arg_type.confirm_type(param)
+        # print('This using the solution in the ')
+
+        arg_type.confirm_type(param, arg)
+        # try:
+        # except ParamsDoesNotMatchError as e:
+        #     error_msg = f'Error at arg => "{arg}" : {str(e)}'
+        #     raise ParamsDoesNotMatchError(error_msg)
+
 

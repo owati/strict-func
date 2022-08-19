@@ -1,7 +1,7 @@
 # The class to aid the checking of more complex types
 
 import abc
-from types import GenericAlias , UnionType
+from types import UnionType
 
 if __name__ == '__main__':
     from exceptions import InvalidDictionaryCheckerError , ParamsDoesNotMatchError, InvalidListCheckerError
@@ -45,7 +45,7 @@ class DictChecker(Checker):
                     msg = f'The key "{_key}" is not a valid key type'
                     raise InvalidDictionaryCheckerError(msg)
 
-                if type(_value) not in [type, UnionType, DictChecker]:
+                if type(_value) not in [type, UnionType, DictChecker, ListChecker]:
                     msg = f'The value "{_value}" is not a valid key type'
                     raise InvalidDictionaryCheckerError(msg)
 
@@ -53,7 +53,7 @@ class DictChecker(Checker):
 
             elif (len(types) == 1 and (type(types[0]) == dict)):
                 for value in types[0].values():
-                    if type(value) not in [type, UnionType, DictChecker]: # the allowed types for checking
+                    if type(value) not in [type, UnionType, DictChecker, ListChecker]: # the allowed types for checking
                         msg = f'The value "{value}" is not supported by this dict checker'
                         raise InvalidDictionaryCheckerError(msg)
 
@@ -75,7 +75,8 @@ class DictChecker(Checker):
         #     return 'Dict []'
         return 'Dict'
 
-    def confirm_type(self, arg : dict):
+    def confirm_type(self, arg : dict, arg_name : str | None):
+        
         if type(arg) == self.main_type:
 
             if type(self.sub_types) == dict:
@@ -86,23 +87,23 @@ class DictChecker(Checker):
 
                         if type(type_to_check) == type:
                             if type(value) != type_to_check:
-                                msg = f"the value '{value}' of key '{key}' is not of type '{type_to_check}' "
+                                msg = f'Error at arg => "{arg_name}" : the value "{value}" of key "{key}" is not of type "{type_to_check}" '
                                 raise ParamsDoesNotMatchError(msg)
 
                         elif type(type_to_check) == UnionType:
                             if not isinstance(value, type_to_check):
-                                msg = f"the value '{value}' of key '{key}' is not of type '{type_to_check}' "
+                                msg = f'Error at arg => "{arg_name}" : the value "{value}" of key "{key}" is not of type "{type_to_check}" '
                                 raise ParamsDoesNotMatchError(msg)
                                 
-                        elif type(type_to_check) == DictChecker:
+                        elif type(type_to_check) in [DictChecker, ListChecker]:
                             try:
                                 type_to_check.confirm_type(value)
                             except ParamsDoesNotMatchError:
-                                msg = f"the value '{value}' of key '{key}' is not of type '{type_to_check}' "
+                                msg = f'Error at arg => "{arg_name}" : the value "{value}" of key "{key}" is not of type "{type_to_check}" '
                                 raise ParamsDoesNotMatchError(msg)
 
                     except KeyError:
-                        msg = f'The key "{key}" was not found in the dictinary checker'
+                        msg = f'Error at arg => "{arg_name}" : The key "{key}" was not found in the dictionary checker'
                         raise ParamsDoesNotMatchError(msg)
 
             else:
@@ -110,28 +111,28 @@ class DictChecker(Checker):
 
                 for key, value in arg.items():
                     if type(key) != key_type:
-                        msg = f'The key "{key}" is not of type {key_type}'
+                        msg = f'Error at arg => "{arg_name}" : The key "{key}" is not of type {key_type}'
                         raise ParamsDoesNotMatchError(msg)
                     
                     if type(value_type) == type:
                         if type(value) != value_type:
-                            msg = f'The value "{value} is not of type "{value_type}"'
+                            msg = f'Error at arg => "{arg_name}" : The value "{value} is not of type "{value_type}"'
                             raise ParamsDoesNotMatchError(msg)
                     
                     elif type(value_type) == UnionType:
                         if not isinstance(value, value_type):
-                            msg = f'The value "{value} is not of type "{value_type}"'
+                            msg = f'Error at arg => "{arg_name}" : The value "{value} is not of type "{value_type}"'
                             raise ParamsDoesNotMatchError(msg)
 
                     elif type(value_type) == DictChecker:
                         try:
                             value_type.confirm_type(value)
                         except ParamsDoesNotMatchError:
-                            msg = f"the value '{value}' of key '{key}' is not of type '{type_to_check}' "
+                            msg = f'Error at arg => "{arg_name}" : the value "{value}" of key "{key}" is not of type "{type_to_check}" '
                             raise ParamsDoesNotMatchError(msg)
         
         else:
-            msg = f'The argunemt {arg} is not of type dict'
+            msg = f'Error at arg => "{arg_name}" : The argunemt {arg} is not of type dict'
             raise ParamsDoesNotMatchError(msg)
 
 
@@ -182,13 +183,13 @@ class ListChecker(Checker):
                 
 
 
-    def confirm_type(self, arg : list):
+    def confirm_type(self, arg : list, arg_name : str | None):
         if type(arg) == self.main_type:
             if len(self.sub_types) == 1:
                 type_to_check = self.sub_types[0]
                 for item in arg:
                     self.confirm_item(item, type_to_check, 
-                                lambda _val, _type : f'The value "{_val}" is not part of the type {_type}' )
+                                lambda _val, _type : f'Error at arg => "{arg_name}" : The value "{_val}" is not part of the type {_type}' )
 
             else:
                 for item in arg:
@@ -196,14 +197,14 @@ class ListChecker(Checker):
                         
                     try:
                         self.confirm_item(item, self.sub_types[ind], 
-                                    lambda _val, _type : f'The value "{_val}"  at index "{ind}" is not of the type {_type}')
+                                    lambda _val, _type : f'Error at arg => "{arg_name}" : The value "{_val}"  at index "{ind}" is not of the type {_type}')
                     except IndexError:
                         if type(self.sub_types[-1]) != type(...):
-                            msg = 'The List does not match the length of the Checker. Try putting "..." at the end'
+                            msg = f'Error at arg => "{arg_name}" : The List does not match the length of the Checker. Try putting "..." at the end'
                             raise ParamsDoesNotMatchError(msg)
         
         else:
-            msg = f"The value of this argument '{arg}' is not of type list"
+            msg = f'Error at arg => "{arg_name}" : The value of this argument "{arg}" is not of type list'
             raise ParamsDoesNotMatchError(msg)
 
 
